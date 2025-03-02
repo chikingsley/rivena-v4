@@ -7,14 +7,14 @@
 
 import { createRoot } from "react-dom/client";
 import { StrictMode } from "react";
-// import { App } from "./App";
-import VoiceFlowUI from "./pages/VoiceFlowUI";
+import { App } from "./App";
+// import VoiceFlowUI from "./pages/VoiceFlowUI";
 
 const elem = document.getElementById("root")!;
 const app = (
   <StrictMode>
-    <VoiceFlowUI />
-      {/* <App /> */}
+    {/* <VoiceFlowUI /> */}
+      <App />
   </StrictMode>
 );
 
