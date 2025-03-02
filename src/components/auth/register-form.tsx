@@ -299,8 +299,9 @@ export function RegisterForm({
                   </p>
                 )}
               </div>
-              
-              <div className="grid gap-2">
+
+              {/* Profile Image */}
+              {/* <div className="grid gap-2">
                 <Label htmlFor="image">Profile Image (optional)</Label>
                 <div className="flex items-center gap-4">
                   {imagePreview && (
@@ -339,7 +340,7 @@ export function RegisterForm({
                     {errors.image}
                   </p>
                 )}
-              </div>
+              </div> */}
               
               <div className="flex items-center space-x-2">
                 <Checkbox 

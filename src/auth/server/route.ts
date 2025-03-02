@@ -1,4 +1,4 @@
-import { toNodeHandler, fromNodeHeaders } from "better-auth/node";
+import { toNodeHandler } from "better-auth/node";
 import { auth } from "./auth";
 
 /**
@@ -9,8 +9,8 @@ import { auth } from "./auth";
  */
 export const authHandler = async (req: Request) => {
   try {
-    // Use the adapter to convert and process the request
-    return await toNodeHandler(auth.handler);
+    // Use auth.handler directly with the request
+    return await auth.handler(req);
   } catch (error) {
     console.error("Auth handler error:", error);
     return new Response(
