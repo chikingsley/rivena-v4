@@ -1,5 +1,5 @@
 import { toNodeHandler } from "better-auth/node";
-import { auth } from "./auth";
+import { auth } from "../../../auth";
 
 /**
  * Auth handler for Bun server routes

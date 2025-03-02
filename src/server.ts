@@ -1,5 +1,5 @@
 import { serve } from "bun";
-import { auth } from "./auth/server/auth.ts"; 
+import { auth } from "../auth.ts"; 
 import { authHandler, getSessionFromRequest } from "./auth/server/route.ts";
 import { registerWithValidation, loginWithLogging, logoutWithCleanup } from "./auth/server/actions.ts";
 import { cors } from "./auth/bun-cors.ts";

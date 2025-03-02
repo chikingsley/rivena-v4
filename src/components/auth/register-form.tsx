@@ -65,7 +65,7 @@ export interface RegisterFormProps {
 
 export function RegisterForm({
   className,
-  callbackUrl = "/dashboard",
+  callbackUrl = "/",
   onSuccess,
   onError,
   ...props

@@ -3,15 +3,18 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import logo from "@/logo.svg";
 import reactLogo from "@/react.svg";
-import { useSession } from "../auth/client/auth-client";
-import { useState } from "react";
+import { useAuth } from "@/components/auth/AuthProvider";
+import React from 'react';
+import { useNavigate } from 'react-router-dom';
 
 interface HomeProps {
-    session: any;
     openAuthModal: (mode: 'login' | 'register') => void;
 }
 
-export default function Home({ session, openAuthModal }: HomeProps) {
+export default function Home({ openAuthModal }: HomeProps) {
+    const { user } = useAuth();
+    const navigate = useNavigate();
+    
     return (
         <div className="container mx-auto p-8 text-center">
             <div className="flex justify-center items-center gap-8 mb-8">
@@ -32,8 +35,8 @@ export default function Home({ session, openAuthModal }: HomeProps) {
                     <h1 className="text-5xl font-bold my-4 leading-tight">Welcome to Rivena</h1>
                     <p className="mb-6">An advanced voice interface powered by AI</p>
 
-                    {session ? (
-                        <Button size="lg" onClick={() => window.location.href = '/voice-flow'}>
+                    {user ? (
+                        <Button size="lg" onClick={() => navigate('/voice-flow')}>
                             Launch Voice Flow UI
                         </Button>
                     ) : (

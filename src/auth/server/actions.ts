@@ -1,4 +1,4 @@
-import { auth } from "./auth";
+import { auth } from "../../../auth";
 
 /**
  * Custom registration with additional validation

@@ -43,7 +43,7 @@ export interface LoginFormProps {
 
 export function LoginForm({
   className,
-  callbackUrl = "/dashboard",
+  callbackUrl = "/",
   onSuccess,
   onError,
   ...props
