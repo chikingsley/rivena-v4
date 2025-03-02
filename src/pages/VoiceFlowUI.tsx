@@ -10,7 +10,7 @@ import {
   MarkerType
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
-import './index.css';
+import '../index.css';
 
 // Custom node component
 const CustomNode = ({ data, isConnectable, selected }) => {
