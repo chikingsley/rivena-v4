@@ -1,73 +1,82 @@
 import { Button } from "@/components/ui/button";
 import logo from "../../logo.svg";
 import { LogOut, Loader2 } from "lucide-react";
-import { signOut } from "@/auth/client/auth-client";
+import { secureSignOut } from "@/auth/client/auth-service";
 import { useState } from "react";
 import { toast } from "sonner";
+import { useAuthStore } from "@/auth/client/auth-store";
 
 // Define a type for the component props
 interface NavHeaderProps {
-  session: any;
   openAuthModal: (mode: 'login' | 'register') => void;
 }
 
-export function NavHeader({ session, openAuthModal }: NavHeaderProps) {
+export function NavHeader({ openAuthModal }: NavHeaderProps) {
   const [loggingOut, setLoggingOut] = useState(false);
+  const { isAuthenticated, user } = useAuthStore();
 
   const handleSignOut = async () => {
     try {
       setLoggingOut(true);
-      await signOut();
-      toast.success("Logged out successfully");
+      const success = await secureSignOut();
+      if (success) {
+        toast.success("Logged out successfully");
+      }
     } catch (error) {
-      toast.error("Failed to log out");
-      console.error(error);
+      console.error("Error signing out:", error);
+      toast.error("Failed to sign out");
     } finally {
       setLoggingOut(false);
     }
   };
 
   return (
-    <header className="w-full py-4 px-6 backdrop-blur-md bg-background/60 border-b border-border fixed top-0 z-50 flex justify-between items-center">
+    <header className="flex items-center justify-between px-4 py-2 border-b">
       <div className="flex items-center">
-        <img src={logo} alt="Logo" className="h-8 w-8 mr-2" />
+        <img src={logo} alt="Rivena Logo" className="h-8 w-8 mr-2" />
         <span className="font-bold text-lg">Rivena</span>
       </div>
-      
-      {session ? (
-        <div className="flex items-center">
-          <span className="mr-4 text-sm">
-            Logged in as: {session.user?.name || session.user?.email}
-          </span>
-          <Button 
-            variant="destructive" 
-            size="sm"
-            onClick={handleSignOut}
-            disabled={loggingOut}
-          >
-            {loggingOut ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Signing out...
-              </>
-            ) : (
-              <>
-                <LogOut className="mr-2 h-4 w-4" />
-                Sign Out
-              </>
-            )}
-          </Button>
-        </div>
-      ) : (
-        <div className="space-x-2">
-          <Button variant="outline" onClick={() => openAuthModal('login')}>
-            Sign In
-          </Button>
-          <Button onClick={() => openAuthModal('register')}>
-            Create Account
-          </Button>
-        </div>
-      )}
+      <div className="flex items-center space-x-2">
+        {isAuthenticated && user ? (
+          <>
+            <span className="text-sm mr-2">Hello, {user.name || user.email}</span>
+            <Button 
+              variant="outline" 
+              size="sm"
+              onClick={handleSignOut}
+              disabled={loggingOut}
+            >
+              {loggingOut ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Signing out...
+                </>
+              ) : (
+                <>
+                  <LogOut className="h-4 w-4 mr-2" />
+                  Sign out
+                </>
+              )}
+            </Button>
+          </>
+        ) : (
+          <>
+            <Button 
+              variant="outline" 
+              size="sm"
+              onClick={() => openAuthModal('login')}
+            >
+              Sign in
+            </Button>
+            <Button 
+              onClick={() => openAuthModal('register')}
+              size="sm"
+            >
+              Register
+            </Button>
+          </>
+        )}
+      </div>
     </header>
   );
 } 

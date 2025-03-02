@@ -183,19 +183,19 @@ class AuthService {
   /**
    * Clear cached authentication data
    */
-  private clearCachedAuth() {
+  public clearCachedAuth() {
     this.cachedAuth = null;
     localStorage.removeItem('cached_auth');
     console.log('Cached authentication cleared');
-    
-    // Also update Zustand store
-    useAuthStore.getState().logout();
     
     // Clear any pending refresh timeout
     if (this.refreshTimeout) {
       clearTimeout(this.refreshTimeout);
       this.refreshTimeout = null;
     }
+    
+    // Emit auth change event
+    this.emitAuthChange(false);
   }
 
   /**
@@ -247,4 +247,140 @@ class AuthService {
 export const authService = new AuthService();
 
 // Re-export Better Auth functions for convenience
-export { signIn, signUp, signOut, useSession }; 
+export { signIn, signUp, signOut, useSession };
+
+/**
+ * Custom wrapper for signOut that handles cleanup
+ */
+export const secureSignOut = async () => {
+  try {
+    // Update Zustand store immediately for responsive UI
+    useAuthStore.getState().logout();
+    
+    // Clear cached auth data
+    authService.clearCachedAuth();
+    
+    // Explicitly emit auth change event to ensure all components update
+    window.dispatchEvent(new CustomEvent('auth:change', { 
+      detail: { isAuthenticated: false } 
+    }));
+    
+    // First try our custom logout endpoint that we know works
+    try {
+      const response = await fetch('/api/custom-auth/logout', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+      });
+      
+      if (response.ok) {
+        console.log('Successfully logged out via custom endpoint');
+        return true;
+      }
+    } catch (customLogoutError) {
+      console.warn('Custom logout failed, falling back to Better Auth signOut:', customLogoutError);
+    }
+    
+    // Fall back to Better Auth's signOut if custom endpoint fails
+    try {
+      await signOut();
+      console.log('Successfully logged out via Better Auth signOut');
+    } catch (signOutError) {
+      console.warn('Better Auth signOut failed, but local state has been cleared:', signOutError);
+      // We still return true because we've already cleared local state
+    }
+    
+    return true;
+  } catch (error) {
+    console.error('Error during secure sign out:', error);
+    // Even if there's an error, we've already cleared local state
+    return true;
+  }
+};
+
+/**
+ * Debug version of signOut to understand why it's failing
+ * This is a temporary function for debugging purposes
+ */
+export const debugSignOut = async () => {
+  console.log('=== DEBUG: Starting sign-out debugging ===');
+  
+  try {
+    // Let's try with the original Better Auth signOut
+    console.log('1. Attempting Better Auth signOut()...');
+    try {
+      const result = await signOut();
+      console.log('   ✓ signOut succeeded:', result);
+    } catch (error) {
+      console.log('   ✗ signOut failed:', error);
+      
+      // If the first attempt fails, let's try with explicit options
+      console.log('2. Attempting signOut with explicit options...');
+      try {
+        const result = await signOut({});
+        console.log('   ✓ signOut with empty options succeeded:', result);
+      } catch (error) {
+        console.log('   ✗ signOut with empty options failed:', error);
+      }
+    }
+    
+    // Now let's try a direct fetch with the same path
+    console.log('3. Attempting direct fetch to /api/auth/sign-out...');
+    try {
+      const response = await fetch('/api/auth/sign-out', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+      });
+      
+      console.log('   Response status:', response.status);
+      console.log('   Response headers:', {...response.headers});
+      
+      try {
+        const data = await response.json();
+        console.log('   Response data:', data);
+      } catch (e) {
+        console.log('   Could not parse response as JSON');
+      }
+    } catch (error) {
+      console.log('   ✗ Direct fetch failed:', error);
+    }
+    
+    // Finally, try the custom logout endpoint
+    console.log('4. Attempting custom logout endpoint...');
+    try {
+      const response = await fetch('/api/custom-auth/logout', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+      });
+      
+      console.log('   Response status:', response.status);
+      try {
+        const data = await response.json();
+        console.log('   Response data:', data);
+      } catch (e) {
+        console.log('   Could not parse response as JSON');
+      }
+    } catch (error) {
+      console.log('   ✗ Custom logout failed:', error);
+    }
+    
+    // For now, still do our local cleanup regardless of API results
+    console.log('5. Cleaning up local state...');
+    useAuthStore.getState().logout();
+    authService.clearCachedAuth();
+    
+    console.log('=== DEBUG: Sign-out debugging completed ===');
+    return true;
+  } catch (error) {
+    console.error('Unexpected error during debug signOut:', error);
+    return false;
+  }
+} 

@@ -30,10 +30,11 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from "@/components/ui/sidebar";
-import { signOut, useSession } from "@/auth/client/auth-client";
+import { useSession } from "@/auth/client/auth-client";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { secureSignOut } from "@/auth/client/auth-service";
 
 export interface NavUserProps {
   user?: {
@@ -52,17 +53,22 @@ export function NavUser({ user, onLogout }: NavUserProps) {
   const handleLogout = async () => {
     try {
       setLoggingOut(true);
-      await signOut();
-      toast.success("Logged out successfully");
-      
-      if (onLogout) {
-        onLogout();
+      const success = await secureSignOut();
+      if (success) {
+        toast.success("Logged out successfully");
+        
+        if (onLogout) {
+          onLogout();
+        } else {
+          // If no callback provided, navigate to home
+          navigate('/');
+        }
       } else {
-        // Default behavior - navigate to home page
-        navigate("/");
+        toast.error("Failed to log out");
       }
     } catch (error) {
       toast.error("Failed to log out");
+      console.error(error);
     } finally {
       setLoggingOut(false);
     }

@@ -18,11 +18,9 @@ import { AuthInitializer } from "./auth/client/auth-initializer";
 
 // Layout for public pages that includes the nav header
 function PublicLayout({ openAuthModal }: { openAuthModal: (mode: 'login' | 'register') => void }) {
-  const { user } = useAuth();
-  
   return (
     <>
-      <NavHeader session={{ user }} openAuthModal={openAuthModal} />
+      <NavHeader openAuthModal={openAuthModal} />
       <main className="pt-20 pb-8">
         <Outlet />
       </main>
@@ -34,6 +32,26 @@ export function App() {
   // State for auth modals
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [authMode, setAuthMode] = useState<'login' | 'register'>('login');
+  
+  // Initialize auth from cached JWT on app load
+  useEffect(() => {
+    // Set loading state while we check
+    useAuthStore.getState().setLoading(true);
+    
+    // Check for cached authentication
+    const user = authService.getCurrentUser();
+    const token = authService.getAuthToken();
+    
+    if (user && token) {
+      // We have cached auth, update the store
+      useAuthStore.getState().setUser(user);
+      useAuthStore.getState().setToken(token);
+      useAuthStore.getState().setAuthenticated(true);
+    }
+    
+    // Set loading to false regardless of result
+    useAuthStore.getState().setLoading(false);
+  }, []);
   
   // Handle successful auth
   const handleAuthSuccess = () => {
@@ -53,10 +71,8 @@ export function App() {
 
   return (
     <BrowserRouter>
-      {/* Initialize authentication state from cache */}
-      <AuthInitializer />
-      
       <AuthProvider>
+        <AuthInitializer />
         <div className="min-h-screen bg-background relative">
           {/* Authentication Modal */}
           <Dialog open={showAuthModal} onOpenChange={setShowAuthModal}>
